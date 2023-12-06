@@ -3,6 +3,11 @@
 #include <time.h>
 #include <string.h>
 #include <stdbool.h>
+#ifdef _WIN32
+#include <conio.h>
+#else
+#define clrscr() printf("\e[1;1H\e[2J")
+#endif
 
 #define NO_TAREAS 6
 #define PAG_POR_TAREA 3
@@ -69,6 +74,7 @@ int main(){
     Psemaforo=NULL;
     Qsemaforo=NULL;
 
+    clrscr();
     crear_lista_tareas();
     ver_lista_tareas();
     while(getchar()!='\n');
@@ -182,17 +188,15 @@ void imprimir_tabla(nodo_PCB *cabeza) {
     AuxImpresion = cabeza;
 
     printf("\n%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s\n", "Proceso", "T.Llega", 
-            "Ciclos", "Estado", "Memoria", "CPU/E/S","Num_Disp", "No.Arch", 
+            "Ciclos", "Estado", "Memoria", "CPU/E-S","Num_Disp", "No.Arch", 
             "Tipo", "Ciclo SC", "Inicio SC", "Durac. SC");
     while(AuxImpresion!=NULL){
         char tipo[4], tipoCliente[8];
         switch(AuxImpresion->cpu_ES){
             case 0:  strcpy(tipo, "CPU");
                      break;
-            case 1: strcpy(tipo, "E  ");
+            case 1: strcpy(tipo, "E-S");
                     break;
-            default: strcpy(tipo, "S  ");
-                     break;
         }
 
         switch(AuxImpresion->tipo_cliente){
@@ -282,6 +286,7 @@ void crear_lista_PCB(void){
 }
 
 void ver_lista_PCB(){
+    clrscr();
     AuxProceso =Pproceso;
     printf("\n%s%15s%3d%15s%3d%15s%3d\n","BLOQUE DE CONTROL DE PROCESOS","Quantum: "
             , quantum, "Tiempo: ", tiempo, "No.Ciclo: ", no_ciclo);
@@ -341,6 +346,7 @@ void roundRobin() {
             AuxProceso2->estado=3;
             while(AuxProceso2->ciclos_CPU>0 && quantum !=0){
                 ver_lista_PCB();
+                imprimir_tabla(Psemaforo);
                 quantum--;
                 tiempoTotal++;
                 AuxProceso2->ciclos_CPU--;
@@ -352,9 +358,9 @@ void roundRobin() {
                         ver_lista_PCB();
                         // Meter info en la nueva tabla de semaforo
                         copiar_a_lista_tareas_semaforo(AuxProceso2);
-                        imprimir_tabla(Psemaforo);
-                        // Eliminar nodo de la tabla PCB
                         eliminarNodoActual(AuxProceso2);
+                        // Eliminar nodo de la tabla PCB
+                        imprimir_tabla(Psemaforo);
                         goto salir;
                     }
                 }
