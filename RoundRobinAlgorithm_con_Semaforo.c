@@ -3,11 +3,8 @@
 #include <time.h>
 #include <string.h>
 #include <stdbool.h>
-#ifdef _WIN32
-#include <conio.h>
-#else
+
 #define clrscr() printf("\e[1;1H\e[2J")
-#endif
 
 #define NO_TAREAS 6
 #define PAG_POR_TAREA 3
