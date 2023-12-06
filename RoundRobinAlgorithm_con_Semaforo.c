@@ -1,7 +1,8 @@
-#include<stdio.h>
-#include<stdlib.h>
-#include<time.h>
-#include<string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <string.h>
+#include <stdbool.h>
 
 #define NO_TAREAS 6
 #define PAG_POR_TAREA 3
@@ -15,14 +16,14 @@ float quantum_ahorrado = 0;
 int no_ciclo = 1;
 bool hayProcesos = false;
 
-struct nodo_tareas{
+typedef struct Nodo_Tareas {
     int id_tarea;
     int localidad_pmt;
     int paginas[PAG_POR_TAREA];
-    struct nodo_tareas *sig;
-};
+    struct Nodo_Tareas *sig;
+} nodo_tareas;
 
-struct nodo_PCB{
+typedef struct Nodo_PCB {
     int id_proceso;
     int no_pag;
     int tiempo_llegada;
@@ -38,8 +39,8 @@ struct nodo_PCB{
     int cont_ciclo_sec_crit;
     int inicio_sec_crit;
     int duracion_sec_crit;
-    struct nodo_PCB *sig;
-};
+    struct Nodo_PCB *sig;
+} nodo_PCB;
 
 nodo_tareas *Ptarea, *Qtarea, *NuevaTarea, *AuxTarea;
 nodo_PCB *Pproceso, *Qproceso, *NuevoProceso, *AuxProceso, *AuxProceso2;
@@ -221,7 +222,7 @@ void crear_lista_PCB(void){
     while(AuxTarea!=NULL){
         int contadorPagina = 0;
         while(contadorPagina<PAG_POR_TAREA){
-            tipoSeleccion=rand()%3;
+            tipoSeleccion=rand()%2;
             if(tipoSeleccion==0) cantRecursos=0;
             else cantRecursos = rand()%5+1;
 
@@ -265,8 +266,10 @@ void crear_lista_PCB(void){
                 NuevoProceso->tiempo_retorno = 0;
                 NuevoProceso->cont_ciclo_sec_crit = 0;
                 NuevoProceso->inicio_sec_crit = rand()%numeroRandom;
-                if(NuevoProceso->inicio_sec_crit ==0) NuevoProceso->duracion_sec_crit = 0;
-                else NuevoProceso->duracion_sec_crit = rand()%3+1;
+                if(NuevoProceso->inicio_sec_crit ==0)
+                    NuevoProceso->duracion_sec_crit = 0;
+                else
+                    NuevoProceso->duracion_sec_crit = rand()%3+1;
                 NuevoProceso->sig=NULL;
                 Qproceso->sig=NuevoProceso;
                 Qproceso=NuevoProceso;
@@ -283,17 +286,15 @@ void ver_lista_PCB(){
     printf("\n%s%15s%3d%15s%3d%15s%3d\n","BLOQUE DE CONTROL DE PROCESOS","Quantum: "
             , quantum, "Tiempo: ", tiempo, "No.Ciclo: ", no_ciclo);
     printf("\n%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s\n", "Proceso", "T.Llega", 
-            "Ciclos", "Estado", "Memoria", "CPU/E/S","Num_Disp", "No.Arch", 
+            "Ciclos", "Estado", "Memoria", "CPU/E-S","Num_Disp", "No.Arch", 
             "Tipo", "Ciclo SC", "Inicio SC", "Durac. SC");
     while(AuxProceso!=NULL){
         char tipo[4], tipoCliente[8];
         switch(AuxProceso->cpu_ES){
             case 0:  strcpy(tipo, "CPU");
                      break;
-            case 1: strcpy(tipo, "E  ");
+            case 1: strcpy(tipo, "E-S");
                     break;
-            default: strcpy(tipo, "S  ");
-                     break;
         }
 
         switch(AuxProceso->tipo_cliente){
@@ -368,7 +369,7 @@ void roundRobin() {
             }
             else
                 AuxProceso2->estado=4;
-salir:
+        salir:
             AuxProceso2= AuxProceso2->sig;
         }
         colocarEnMemoria();
