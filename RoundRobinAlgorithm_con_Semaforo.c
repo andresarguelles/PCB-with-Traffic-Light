@@ -101,7 +101,8 @@ void crear_lista_tareas(void){
             Ptarea->id_tarea = contadorTareas;
             Ptarea->localidad_pmt= loc_pmt+j;
 
-            for(int i=0; i<PAG_POR_TAREA; i+=1){
+            int i;
+            for(i=0; i<PAG_POR_TAREA; i+=1){
                 Ptarea->paginas[i] = rand()%5+1;
             }
 
@@ -113,7 +114,8 @@ void crear_lista_tareas(void){
             NuevaTarea->id_tarea = contadorTareas;
             NuevaTarea->localidad_pmt = loc_pmt+j;
 
-            for(int i=0; i<PAG_POR_TAREA; i+=1){
+            int i;
+            for(i=0; i<PAG_POR_TAREA; i+=1){
                 NuevaTarea->paginas[i] = rand()%5+1;
             }
 
@@ -175,7 +177,8 @@ void ver_lista_tareas() {
     printf("\n%-10s%-10s%9s\n", "ID.Tarea", "Loc.PMT", "Paginas");
     while(AuxTarea!=NULL) {
         printf(" J%d%10d     ", AuxTarea->id_tarea, AuxTarea->localidad_pmt);
-        for(int i=0; i<PAG_POR_TAREA; i+=1) {
+        int i;
+        for(i=0; i<PAG_POR_TAREA; i+=1) {
             printf(" P%d  ", AuxTarea->paginas[i]);
         }
         printf("\n");
@@ -316,7 +319,7 @@ void ver_lista_PCB(){
                 AuxProceso->inicio_sec_crit, AuxProceso->duracion_sec_crit);
         AuxProceso=AuxProceso->sig;
     }
-    while(getchar()!='\n');
+    /* while(getchar()!='\n'); */
 }
 
 void procesarTarea(){
@@ -358,8 +361,8 @@ void roundRobin() {
                         ver_lista_PCB();
                         // Meter info en la nueva tabla de semaforo
                         copiar_a_lista_tareas_semaforo(AuxProceso2);
-                        eliminarNodoActual(AuxProceso2);
                         // Eliminar nodo de la tabla PCB
+                        eliminarNodoActual(AuxProceso2);
                         imprimir_tabla(Psemaforo);
                         goto salir;
                     }
