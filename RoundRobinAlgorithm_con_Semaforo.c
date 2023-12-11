@@ -206,8 +206,10 @@ void crear_lista_PCB(void){
                 /* Si la sección critica no existe no asignamos duración */
                 if(Pproceso->inicio_sec_crit != 0)
                     Pproceso->duracion_sec_crit = rand()%3+1;
-                else
-                    Pproceso->duracion_sec_crit = 0;
+                else {
+                    Pproceso->duracion_sec_crit = (rand() %
+                        (Pproceso->ciclos_CPU - Pproceso->inicio_sec_crit));
+                }
                 Pproceso->interrupcion = (rand() % 6) - 1; // de -1 a 4
                 Pproceso->sig=NULL;
                 Qproceso=Pproceso;
@@ -224,8 +226,10 @@ void crear_lista_PCB(void){
                 NuevoProceso->inicio_sec_crit = rand()%numeroRandom;
                 if(NuevoProceso->inicio_sec_crit ==0)
                     NuevoProceso->duracion_sec_crit = 0;
-                else
-                    NuevoProceso->duracion_sec_crit = rand()%3+1;
+                else {
+                    NuevoProceso->duracion_sec_crit = (rand() %
+                        (NuevoProceso->ciclos_CPU - NuevoProceso->inicio_sec_crit));
+                }
                 NuevoProceso->interrupcion=(rand() % 6) - 1;
                 NuevoProceso->sig=NULL;
                 Qproceso->sig=NuevoProceso;
