@@ -30,17 +30,11 @@ typedef struct Nodo_PCB {
     int no_pag;
     int tiempo_llegada;
     int ciclos_CPU;
-    int memoria;
-    int cpu_ES;
-    int recursos;
-    int archivos;
-    int tipo_cliente;
     int estado;
-    int tiempo_espera;
-    int tiempo_retorno;
     int cont_ciclo_sec_crit;
     int inicio_sec_crit;
     int duracion_sec_crit;
+    int interrupcion;
     struct Nodo_PCB *sig;
 } nodo_PCB;
 
@@ -80,9 +74,6 @@ int main(){
     ver_lista_PCB();
 
     procesarTarea();
-    printf("%15s%d%35s%.2f%25s%.2f\n\n", "Tiempo total: ", tiempoTotal, 
-            "Tiempo promedio de retorno: ", tiempo_promedio_retorno,
-            "Quantum ahorrado: ", quantum_ahorrado);
 
     return 0;
 }
@@ -132,14 +123,7 @@ void copiar_a_lista_tareas_semaforo(nodo_PCB *copiando){
         Psemaforo->no_pag              = copiando->no_pag;
         Psemaforo->tiempo_llegada      = copiando->tiempo_llegada;
         Psemaforo->ciclos_CPU          = copiando->ciclos_CPU;
-        Psemaforo->memoria             = copiando->memoria;
-        Psemaforo->cpu_ES              = copiando->cpu_ES;
-        Psemaforo->recursos            = copiando->recursos;
-        Psemaforo->archivos            = copiando->archivos;
-        Psemaforo->tipo_cliente        = copiando->tipo_cliente;
         Psemaforo->estado              = copiando->estado;
-        Psemaforo->tiempo_espera       = copiando->tiempo_espera;
-        Psemaforo->tiempo_retorno      = copiando->tiempo_retorno;
         Psemaforo->cont_ciclo_sec_crit = copiando->cont_ciclo_sec_crit;
         Psemaforo->inicio_sec_crit     = copiando->inicio_sec_crit;
         Psemaforo->duracion_sec_crit   = copiando->duracion_sec_crit;
@@ -151,14 +135,7 @@ void copiar_a_lista_tareas_semaforo(nodo_PCB *copiando){
         NuevoSemaforo->no_pag              = copiando->no_pag;
         NuevoSemaforo->tiempo_llegada      = copiando->tiempo_llegada;
         NuevoSemaforo->ciclos_CPU          = copiando->ciclos_CPU;
-        NuevoSemaforo->memoria             = copiando->memoria;
-        NuevoSemaforo->cpu_ES              = copiando->cpu_ES;
-        NuevoSemaforo->recursos            = copiando->recursos;
-        NuevoSemaforo->archivos            = copiando->archivos;
-        NuevoSemaforo->tipo_cliente        = copiando->tipo_cliente;
         NuevoSemaforo->estado              = copiando->estado;
-        NuevoSemaforo->tiempo_espera       = copiando->tiempo_espera;
-        NuevoSemaforo->tiempo_retorno      = copiando->tiempo_retorno;
         NuevoSemaforo->cont_ciclo_sec_crit = copiando->cont_ciclo_sec_crit;
         NuevoSemaforo->inicio_sec_crit     = copiando->inicio_sec_crit;
         NuevoSemaforo->duracion_sec_crit   = copiando->duracion_sec_crit;
@@ -187,30 +164,16 @@ void imprimir_tabla(nodo_PCB *cabeza) {
     nodo_PCB *AuxImpresion = NULL;
     AuxImpresion = cabeza;
 
-    printf("\n%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s\n", "Proceso", "T.Llega", 
-            "Ciclos", "Estado", "Memoria", "CPU/E-S","Num_Disp", "No.Arch", 
-            "Tipo", "Ciclo SC", "Inicio SC", "Durac. SC");
+    printf("\n%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s\n", "Proceso", "T.Llega", 
+            "Ciclos", "Estado", "Ciclo SC", "Inicio SC", "Durac. SC", "Interrup");
     while(AuxImpresion!=NULL){
-        char tipo[4], tipoCliente[8];
-        switch(AuxImpresion->cpu_ES){
-            case 0:  strcpy(tipo, "CPU");
-                     break;
-            case 1: strcpy(tipo, "E-S");
-                    break;
-        }
 
-        switch(AuxImpresion->tipo_cliente){
-            case 0: strcpy(tipoCliente, "Sistema");
-                    break;
-            case 1: strcpy(tipoCliente, "Usuario");
-                    break;
-        }
-
-        printf(" J%dP%-7d%2dt%9dms%9d%8dKB %9s%10d%9d%15s%10d%10d%10d\n", AuxImpresion->id_proceso, 
-                AuxImpresion->no_pag, AuxImpresion->tiempo_llegada, AuxImpresion->ciclos_CPU, 
-                AuxImpresion->estado, AuxImpresion->memoria, tipo, 
-                AuxImpresion->recursos, AuxImpresion->archivos, tipoCliente, AuxImpresion->cont_ciclo_sec_crit,
-                AuxImpresion->inicio_sec_crit, AuxImpresion->duracion_sec_crit);
+        printf(" J%dP%-7d%2dt%9dms%9d%10d%10d%10d%10d\n",
+                AuxImpresion->id_proceso, AuxImpresion->no_pag,
+                AuxImpresion->tiempo_llegada, AuxImpresion->ciclos_CPU, 
+                AuxImpresion->estado, AuxImpresion->cont_ciclo_sec_crit,
+                AuxImpresion->inicio_sec_crit, AuxImpresion->duracion_sec_crit,
+                AuxImpresion->interrupcion);
         AuxImpresion=AuxImpresion->sig;
     }
     while(getchar()!='\n');
@@ -237,13 +200,7 @@ void crear_lista_PCB(void){
                 Pproceso->tiempo_llegada= contadorProcesos;
                 Pproceso->ciclos_CPU = rand()%11+5;
                 numeroRandom = Pproceso->ciclos_CPU;
-                Pproceso->memoria = rand()%5+1;
-                Pproceso->cpu_ES = tipoSeleccion;
-                Pproceso->recursos = cantRecursos;
-                Pproceso->archivos = rand()%5+1;
-                Pproceso->tipo_cliente = rand()%2;
                 Pproceso->estado = 1;//Tiene 4 posibles estados 1, 2, 3 y 5
-                Pproceso->tiempo_retorno = 0;
                 Pproceso->cont_ciclo_sec_crit = 0;
                 Pproceso->inicio_sec_crit = rand()%numeroRandom;
                 /* Si la sección critica no existe no asignamos duración */
@@ -251,6 +208,7 @@ void crear_lista_PCB(void){
                     Pproceso->duracion_sec_crit = rand()%3+1;
                 else
                     Pproceso->duracion_sec_crit = 0;
+                Pproceso->interrupcion = (rand() % 6) - 1; // de -1 a 4
                 Pproceso->sig=NULL;
                 Qproceso=Pproceso;
 
@@ -261,19 +219,14 @@ void crear_lista_PCB(void){
                 NuevoProceso->tiempo_llegada= contadorProcesos;
                 NuevoProceso->ciclos_CPU = rand()%11+5;
                 numeroRandom = NuevoProceso->ciclos_CPU;
-                NuevoProceso->memoria = rand()%5+1;
-                NuevoProceso->cpu_ES = tipoSeleccion;
-                NuevoProceso->recursos = cantRecursos;
-                NuevoProceso->archivos = rand()%5+1;
-                NuevoProceso->tipo_cliente = rand()%2;
                 NuevoProceso->estado = 1;
-                NuevoProceso->tiempo_retorno = 0;
                 NuevoProceso->cont_ciclo_sec_crit = 0;
                 NuevoProceso->inicio_sec_crit = rand()%numeroRandom;
                 if(NuevoProceso->inicio_sec_crit ==0)
                     NuevoProceso->duracion_sec_crit = 0;
                 else
                     NuevoProceso->duracion_sec_crit = rand()%3+1;
+                NuevoProceso->interrupcion=(rand() % 6) - 1;
                 NuevoProceso->sig=NULL;
                 Qproceso->sig=NuevoProceso;
                 Qproceso=NuevoProceso;
@@ -290,30 +243,14 @@ void ver_lista_PCB(){
     AuxProceso =Pproceso;
     printf("\n%s%15s%3d%15s%3d%15s%3d\n","BLOQUE DE CONTROL DE PROCESOS","Quantum: "
             , quantum, "Tiempo: ", tiempo, "No.Ciclo: ", no_ciclo);
-    printf("\n%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s\n", "Proceso", "T.Llega", 
-            "Ciclos", "Estado", "Memoria", "CPU/E-S","Num_Disp", "No.Arch", 
-            "Tipo", "Ciclo SC", "Inicio SC", "Durac. SC");
+    printf("\n%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s\n", "Proceso", "T.Llega", 
+            "Ciclos", "Estado", "Ciclo SC", "Inicio SC", "Durac. SC", "Interrup");
     while(AuxProceso!=NULL){
-        char tipo[4], tipoCliente[8];
-        switch(AuxProceso->cpu_ES){
-            case 0:  strcpy(tipo, "CPU");
-                     break;
-            case 1: strcpy(tipo, "E-S");
-                    break;
-        }
-
-        switch(AuxProceso->tipo_cliente){
-            case 0: strcpy(tipoCliente, "Sistema");
-                    break;
-            case 1: strcpy(tipoCliente, "Usuario");
-                    break;
-        }
-
-        printf(" J%dP%-7d%2dt%9dms%9d%8dKB %9s%10d%9d%15s%10d%10d%10d\n",                   AuxProceso->id_proceso, 
-                AuxProceso->no_pag, AuxProceso->tiempo_llegada, AuxProceso->ciclos_CPU, 
-                AuxProceso->estado, AuxProceso->memoria, tipo, 
-                AuxProceso->recursos, AuxProceso->archivos, tipoCliente, AuxProceso->cont_ciclo_sec_crit,
-                AuxProceso->inicio_sec_crit, AuxProceso->duracion_sec_crit);
+        printf(" J%dP%-7d%2dt%9dms%9d%10d%10d%10d%10d\n", AuxProceso->id_proceso, 
+                AuxProceso->no_pag, AuxProceso->tiempo_llegada,
+                AuxProceso->ciclos_CPU, AuxProceso->estado,
+                AuxProceso->cont_ciclo_sec_crit, AuxProceso->inicio_sec_crit,
+                AuxProceso->duracion_sec_crit, AuxProceso->interrupcion);
         AuxProceso=AuxProceso->sig;
     }
     /* while(getchar()!='\n'); */
@@ -367,11 +304,6 @@ void roundRobin() {
             } 
             if(AuxProceso2->ciclos_CPU==0){
                 AuxProceso2->estado=5;
-                if(AuxProceso2->tiempo_retorno==0){
-                    AuxProceso2->tiempo_retorno = tiempoTotal - tiempo;
-                    tiempo_promedio_retorno += (float)(tiempoTotal - tiempo);
-                    quantum_ahorrado+= (float)quantum;
-                }
             }
             else
                 AuxProceso2->estado=4;
@@ -381,8 +313,6 @@ void roundRobin() {
         colocarEnMemoria();
         no_ciclo++;
     }
-    tiempo_promedio_retorno /=(float)(NO_TAREAS*PAG_POR_TAREA);
-    quantum_ahorrado /= (float)TAM_QUANTUM;
 }
 
 void eliminarNodoActual(nodo_PCB *nodo_actual) {
