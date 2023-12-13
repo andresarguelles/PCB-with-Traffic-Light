@@ -181,34 +181,28 @@ void imprimir_tabla(nodo_PCB *cabeza) {
 
 void crear_lista_PCB(void){
     int contadorProcesos=0;
-    int tipoSeleccion;
-    int cantRecursos;
-    int numeroRandom;
     //Dado que no hay proceso, agarramos la primer tarea
     AuxTarea = Ptarea;
     while(AuxTarea!=NULL){
         int contadorPagina = 0;
         while(contadorPagina<PAG_POR_TAREA){
-            tipoSeleccion=rand()%2;
-            if(tipoSeleccion==0) cantRecursos=0;
-            else cantRecursos = rand()%5+1;
 
             if(Pproceso==NULL){
                 Pproceso= (nodo_PCB *)malloc(sizeof(nodo_PCB));
                 Pproceso->id_proceso= AuxTarea->id_tarea;
                 Pproceso->no_pag=AuxTarea->paginas[contadorPagina];
                 Pproceso->tiempo_llegada= contadorProcesos;
-                Pproceso->ciclos_CPU = rand()%11+5;
-                numeroRandom = Pproceso->ciclos_CPU;
+                Pproceso->ciclos_CPU = (rand() % 11) + 5;
                 Pproceso->estado = 1;//Tiene 4 posibles estados 1, 2, 3 y 5
                 Pproceso->cont_ciclo_sec_crit = 0;
-                Pproceso->inicio_sec_crit = rand()%numeroRandom;
-                /* Si la sección critica no existe no asignamos duración */
-                if(Pproceso->inicio_sec_crit != 0)
-                    Pproceso->duracion_sec_crit = rand()%3+1;
+                Pproceso->inicio_sec_crit = rand() % Pproceso->ciclos_CPU;
+                /* Si la Sec. Crit. 3 posiciones antes del número de ciclos
+                 * de CPU creamos una duración de SC entre 1 y 3 */
+                if((Pproceso->ciclos_CPU - Pproceso->inicio_sec_crit) > 2)
+                    Pproceso->duracion_sec_crit = (rand() % 3) + 1;
                 else {
                     Pproceso->duracion_sec_crit = (rand() %
-                        (Pproceso->ciclos_CPU - Pproceso->inicio_sec_crit));
+                        (Pproceso->ciclos_CPU - Pproceso->inicio_sec_crit) + 1);
                 }
                 Pproceso->interrupcion = (rand() % 6) - 1; // de -1 a 4
                 Pproceso->sig=NULL;
@@ -219,16 +213,15 @@ void crear_lista_PCB(void){
                 NuevoProceso->id_proceso=AuxTarea->id_tarea;
                 NuevoProceso->no_pag= AuxTarea->paginas[contadorPagina];
                 NuevoProceso->tiempo_llegada= contadorProcesos;
-                NuevoProceso->ciclos_CPU = rand()%11+5;
-                numeroRandom = NuevoProceso->ciclos_CPU;
+                NuevoProceso->ciclos_CPU = (rand() % 11) + 5;
                 NuevoProceso->estado = 1;
                 NuevoProceso->cont_ciclo_sec_crit = 0;
-                NuevoProceso->inicio_sec_crit = rand()%numeroRandom;
-                if(NuevoProceso->inicio_sec_crit ==0)
-                    NuevoProceso->duracion_sec_crit = 0;
+                NuevoProceso->inicio_sec_crit = rand() % NuevoProceso->ciclos_CPU;
+                if((NuevoProceso->ciclos_CPU - NuevoProceso->inicio_sec_crit) > 2)
+                    NuevoProceso->duracion_sec_crit = (rand() % 3) + 1;
                 else {
                     NuevoProceso->duracion_sec_crit = (rand() %
-                        (NuevoProceso->ciclos_CPU - NuevoProceso->inicio_sec_crit));
+                        (NuevoProceso->ciclos_CPU - NuevoProceso->inicio_sec_crit) + 1);
                 }
                 NuevoProceso->interrupcion=(rand() % 6) - 1;
                 NuevoProceso->sig=NULL;
@@ -257,7 +250,6 @@ void ver_lista_PCB(){
                 AuxProceso->duracion_sec_crit, AuxProceso->interrupcion);
         AuxProceso=AuxProceso->sig;
     }
-    /* while(getchar()!='\n'); */
 }
 
 void procesarTarea(){
