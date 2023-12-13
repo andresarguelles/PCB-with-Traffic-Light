@@ -38,14 +38,30 @@ typedef struct Nodo_PCB {
     struct Nodo_PCB *sig;
 } nodo_PCB;
 
+typedef struct PCB_Semaforo {
+    int id_proceso;
+    int no_pag;
+    int tiempo_llegada;
+    int ciclos_CPU;
+    int estado;
+    int cont_ciclo_sec_crit;
+    int inicio_sec_crit;
+    int duracion_sec_crit;
+    int interrupcion;
+    int semaforo;
+    int wait;
+    int signal;
+    struct PCB_Semaforo *sig;
+} PCB_Semaforo;
+
 nodo_tareas *Ptarea, *Qtarea, *NuevaTarea, *AuxTarea;
 nodo_PCB *Pproceso, *Qproceso, *NuevoProceso, *AuxProceso, *AuxProceso2;
-nodo_PCB *Psemaforo, *Qsemaforo, *NuevoSemaforo, *AuxSemaforo, *AuxSemaforo2;
+PCB_Semaforo *Psemaforo, *Qsemaforo, *NuevoSemaforo, *AuxSemaforo, *AuxSemaforo2;
 
 void crear_lista_tareas();
 void copiar_a_lista_tareas_semaforo(nodo_PCB *copiando);
 void ver_lista_tareas();
-void imprimir_tabla(nodo_PCB *cabeza);
+void imprimir_tabla(PCB_Semaforo *cabeza);
 void crear_lista_PCB();
 void ver_lista_PCB();
 void colocarEnMemoria();
@@ -118,7 +134,7 @@ void crear_lista_tareas(void){
 
 void copiar_a_lista_tareas_semaforo(nodo_PCB *copiando){
     if(Psemaforo==NULL){
-        Psemaforo= (nodo_PCB *)malloc(sizeof(nodo_PCB));
+        Psemaforo= (PCB_Semaforo *)malloc(sizeof(PCB_Semaforo));
         Psemaforo->id_proceso          = copiando->id_proceso;
         Psemaforo->no_pag              = copiando->no_pag;
         Psemaforo->tiempo_llegada      = copiando->tiempo_llegada;
@@ -127,10 +143,13 @@ void copiar_a_lista_tareas_semaforo(nodo_PCB *copiando){
         Psemaforo->cont_ciclo_sec_crit = copiando->cont_ciclo_sec_crit;
         Psemaforo->inicio_sec_crit     = copiando->inicio_sec_crit;
         Psemaforo->duracion_sec_crit   = copiando->duracion_sec_crit;
+        Psemaforo->semaforo = 1;
+        Psemaforo->wait =1;
+        Psemaforo->signal=1;
         Psemaforo->sig=NULL;
         Qsemaforo=Psemaforo;
     }else{
-        NuevoSemaforo = (nodo_PCB *)malloc(sizeof(nodo_PCB));
+        NuevoSemaforo = (PCB_Semaforo *)malloc(sizeof(PCB_Semaforo));
         NuevoSemaforo->id_proceso          = copiando->id_proceso;
         NuevoSemaforo->no_pag              = copiando->no_pag;
         NuevoSemaforo->tiempo_llegada      = copiando->tiempo_llegada;
@@ -139,6 +158,9 @@ void copiar_a_lista_tareas_semaforo(nodo_PCB *copiando){
         NuevoSemaforo->cont_ciclo_sec_crit = copiando->cont_ciclo_sec_crit;
         NuevoSemaforo->inicio_sec_crit     = copiando->inicio_sec_crit;
         NuevoSemaforo->duracion_sec_crit   = copiando->duracion_sec_crit;
+        NuevoSemaforo->semaforo=1;
+        NuevoSemaforo->wait =1;
+        NuevoSemaforo->signal=1;
         NuevoSemaforo->sig                 = NULL;
         Qsemaforo->sig=NuevoSemaforo;
         Qsemaforo=NuevoSemaforo;
@@ -160,20 +182,20 @@ void ver_lista_tareas() {
     }
 }
 
-void imprimir_tabla(nodo_PCB *cabeza) {
-    nodo_PCB *AuxImpresion = NULL;
+void imprimir_tabla(PCB_Semaforo *cabeza) {
+    PCB_Semaforo *AuxImpresion = NULL;
     AuxImpresion = cabeza;
 
-    printf("\n%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s\n", "Proceso", "T.Llega", 
-            "Ciclos", "Estado", "Ciclo SC", "Inicio SC", "Durac. SC", "Interrup");
+    printf("\n%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s\n", "Proceso", "T.Llega", 
+            "Ciclos", "Estado", "Ciclo SC", "Inicio SC", "Durac. SC", "Interrup", "Semaf", "Wait   ", "Signal");
     while(AuxImpresion!=NULL){
 
-        printf(" J%dP%-7d%2dt%9dms%9d%10d%10d%10d%10d\n",
+        printf(" J%dP%-7d%2dt%9dms%9d%10d%10d%10d%10d%10d%10d%10d\n",
                 AuxImpresion->id_proceso, AuxImpresion->no_pag,
                 AuxImpresion->tiempo_llegada, AuxImpresion->ciclos_CPU, 
                 AuxImpresion->estado, AuxImpresion->cont_ciclo_sec_crit,
                 AuxImpresion->inicio_sec_crit, AuxImpresion->duracion_sec_crit,
-                AuxImpresion->interrupcion);
+                AuxImpresion->interrupcion, AuxImpresion->semaforo, AuxImpresion->wait, AuxImpresion->signal);
         AuxImpresion=AuxImpresion->sig;
     }
     while(getchar()!='\n');
