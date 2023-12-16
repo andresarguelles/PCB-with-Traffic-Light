@@ -2,21 +2,20 @@
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
-#include <stdbool.h>
 
 #define clrscr() printf("\e[1;1H\e[2J")
 
-#define NO_TAREAS 6
+#define NO_TAREAS     6
 #define PAG_POR_TAREA 3
-#define TAM_QUANTUM 5
+#define TAM_QUANTUM   5
+#define TRUE          1
+#define FALSE         0
 
-int quantum = TAM_QUANTUM;
-int tiempo = 0;
-int tiempoTotal =0;
-float tiempo_promedio_retorno = 0;
-float quantum_ahorrado = 0;
-int no_ciclo = 1;
-bool hayProcesos = false;
+int quantum     = TAM_QUANTUM;
+int tiempo      = 0;
+int tiempoTotal = 0;
+int no_ciclo    = 1;
+int hayProcesos = FALSE;
 
 typedef struct Nodo_Tareas {
     int id_tarea;
@@ -284,7 +283,7 @@ void colocarEnMemoria(){
     while(AuxProceso!=NULL){
         if(AuxProceso->estado==1 || AuxProceso->estado==4){
             AuxProceso->estado = 2;
-            hayProcesos = true;
+            hayProcesos = TRUE;
         }
         AuxProceso=AuxProceso->sig;
     }
@@ -293,7 +292,7 @@ void colocarEnMemoria(){
 
 void roundRobin() {
     while(hayProcesos){
-        hayProcesos = false;
+        hayProcesos = FALSE;
         AuxProceso2 = Pproceso;
         while(AuxProceso2!=NULL){
             quantum = 5;
