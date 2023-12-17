@@ -185,8 +185,9 @@ void imprimir_tabla(PCB_Semaforo *cabeza) {
     PCB_Semaforo *AuxImpresion = NULL;
     AuxImpresion = cabeza;
 
-    printf("\n%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s\n", "Proceso", "T.Llega", 
-            "Ciclos", "Estado", "Ciclo SC", "Inicio SC", "Durac. SC", "Interrup", "Semaf", "Wait   ", "Signal");
+    printf("\n%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s\n",
+            "Proceso", "T.Llega", "Ciclos", "Estado", "Ciclo SC", "Inicio SC",
+            "Durac. SC", "Interrup", "Semaf", "Wait   ", "Signal");
     while(AuxImpresion!=NULL){
 
         printf(" J%dP%-7d%2dt%9dms%9d%10d%10d%10d%10d%10d%10d%10d\n",
@@ -194,7 +195,8 @@ void imprimir_tabla(PCB_Semaforo *cabeza) {
                 AuxImpresion->tiempo_llegada, AuxImpresion->ciclos_CPU, 
                 AuxImpresion->estado, AuxImpresion->cont_ciclo_sec_crit,
                 AuxImpresion->inicio_sec_crit, AuxImpresion->duracion_sec_crit,
-                AuxImpresion->interrupcion, AuxImpresion->semaforo, AuxImpresion->wait, AuxImpresion->signal);
+                AuxImpresion->interrupcion, AuxImpresion->semaforo,
+                AuxImpresion->wait, AuxImpresion->signal);
         AuxImpresion=AuxImpresion->sig;
     }
     while(getchar()!='\n');
@@ -259,8 +261,8 @@ void crear_lista_PCB(void){
 void ver_lista_PCB(){
     clrscr();
     AuxProceso =Pproceso;
-    printf("\n%s%15s%3d%15s%3d%15s%3d\n","BLOQUE DE CONTROL DE PROCESOS","Quantum: "
-            , quantum, "Tiempo: ", tiempo, "No.Ciclo: ", no_ciclo);
+    printf("\n%s%15s%3d%15s%3d%15s%3d\n","BLOQUE DE CONTROL DE PROCESOS",
+            "Quantum: ", quantum, "Tiempo: ", tiempo, "No.Ciclo: ", no_ciclo);
     printf("\n%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s\n", "Proceso", "T.Llega", 
             "Ciclos", "Estado", "Ciclo SC", "Inicio SC", "Durac. SC", "Interrup");
     while(AuxProceso!=NULL){
