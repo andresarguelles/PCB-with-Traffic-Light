@@ -30,10 +30,10 @@ typedef struct Nodo_PCB {
     int tiempo_llegada;
     int ciclos_CPU;
     int estado;
+    int interrupcion;
     int cont_ciclo_sec_crit;
     int inicio_sec_crit;
     int duracion_sec_crit;
-    int interrupcion;
     struct Nodo_PCB *sig;
 } nodo_PCB;
 
@@ -43,10 +43,10 @@ typedef struct PCB_Semaforo {
     int tiempo_llegada;
     int ciclos_CPU;
     int estado;
+    int interrupcion;
     int cont_ciclo_sec_crit;
     int inicio_sec_crit;
     int duracion_sec_crit;
-    int interrupcion;
     int semaforo;
     int wait;
     int signal;
@@ -139,10 +139,10 @@ void copiar_a_lista_tareas_semaforo(nodo_PCB *copiando){
         Psemaforo->tiempo_llegada      = copiando->tiempo_llegada;
         Psemaforo->ciclos_CPU          = copiando->ciclos_CPU;
         Psemaforo->estado              = copiando->estado;
+        Psemaforo->interrupcion        = copiando->interrupcion;
         Psemaforo->cont_ciclo_sec_crit = copiando->cont_ciclo_sec_crit;
         Psemaforo->inicio_sec_crit     = copiando->inicio_sec_crit;
         Psemaforo->duracion_sec_crit   = copiando->duracion_sec_crit;
-        Psemaforo->interrupcion        = copiando->interrupcion;
         Psemaforo->semaforo = 1;
         Psemaforo->wait =1;
         Psemaforo->signal=1;
@@ -155,10 +155,10 @@ void copiar_a_lista_tareas_semaforo(nodo_PCB *copiando){
         NuevoSemaforo->tiempo_llegada      = copiando->tiempo_llegada;
         NuevoSemaforo->ciclos_CPU          = copiando->ciclos_CPU;
         NuevoSemaforo->estado              = copiando->estado;
+        NuevoSemaforo->interrupcion        = copiando->interrupcion;
         NuevoSemaforo->cont_ciclo_sec_crit = copiando->cont_ciclo_sec_crit;
         NuevoSemaforo->inicio_sec_crit     = copiando->inicio_sec_crit;
         NuevoSemaforo->duracion_sec_crit   = copiando->duracion_sec_crit;
-        NuevoSemaforo->interrupcion        = copiando->interrupcion;
         NuevoSemaforo->semaforo=1;
         NuevoSemaforo->wait =1;
         NuevoSemaforo->signal=1;
@@ -188,16 +188,16 @@ void imprimir_tabla(PCB_Semaforo *cabeza) {
     AuxImpresion = cabeza;
 
     printf("\n%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s\n",
-            "Proceso", "T.Llega", "Ciclos", "Estado", "Ciclo SC", "Inicio SC",
-            "Durac. SC", "Interrup", "Semaf", "Wait   ", "Signal");
+            "Proceso", "T.Llega", "Ciclos", "Estado", "Interrup", "Ciclo SC", "Inicio SC",
+            "Durac. SC", "Semaf", "Wait   ", "Signal");
     while(AuxImpresion!=NULL){
 
         printf(" J%dP%-7d%2dt%9dms%9d%10d%10d%10d%10d%10d%10d%10d\n",
                 AuxImpresion->id_proceso, AuxImpresion->no_pag,
                 AuxImpresion->tiempo_llegada, AuxImpresion->ciclos_CPU, 
-                AuxImpresion->estado, AuxImpresion->cont_ciclo_sec_crit,
+                AuxImpresion->estado, AuxImpresion->interrupcion, AuxImpresion->cont_ciclo_sec_crit,
                 AuxImpresion->inicio_sec_crit, AuxImpresion->duracion_sec_crit,
-                AuxImpresion->interrupcion, AuxImpresion->semaforo,
+                AuxImpresion->semaforo,
                 AuxImpresion->wait, AuxImpresion->signal);
         AuxImpresion=AuxImpresion->sig;
     }
@@ -219,6 +219,7 @@ void crear_lista_PCB(void){
                 Pproceso->tiempo_llegada= contadorProcesos;
                 Pproceso->ciclos_CPU = (rand() % 11) + 5;
                 Pproceso->estado = 1;//Tiene 4 posibles estados 1, 2, 3 y 5
+                Pproceso->interrupcion = (rand() % 6) - 1; // de -1 a 4
                 Pproceso->cont_ciclo_sec_crit = 0;
                 Pproceso->inicio_sec_crit = rand() % Pproceso->ciclos_CPU;
                 /* Si la Sec. Crit. 3 posiciones antes del número de ciclos
@@ -229,7 +230,6 @@ void crear_lista_PCB(void){
                     Pproceso->duracion_sec_crit = (rand() %
                         (Pproceso->ciclos_CPU - Pproceso->inicio_sec_crit) + 1);
                 }
-                Pproceso->interrupcion = (rand() % 6) - 1; // de -1 a 4
                 Pproceso->sig=NULL;
                 Qproceso=Pproceso;
 
@@ -240,6 +240,7 @@ void crear_lista_PCB(void){
                 NuevoProceso->tiempo_llegada= contadorProcesos;
                 NuevoProceso->ciclos_CPU = (rand() % 11) + 5;
                 NuevoProceso->estado = 1;
+                NuevoProceso->interrupcion=(rand() % 6) - 1;
                 NuevoProceso->cont_ciclo_sec_crit = 0;
                 NuevoProceso->inicio_sec_crit = rand() % NuevoProceso->ciclos_CPU;
                 if((NuevoProceso->ciclos_CPU - NuevoProceso->inicio_sec_crit) > 2)
@@ -248,7 +249,7 @@ void crear_lista_PCB(void){
                     NuevoProceso->duracion_sec_crit = (rand() %
                         (NuevoProceso->ciclos_CPU - NuevoProceso->inicio_sec_crit) + 1);
                 }
-                NuevoProceso->interrupcion=(rand() % 6) - 1;
+                
                 NuevoProceso->sig=NULL;
                 Qproceso->sig=NuevoProceso;
                 Qproceso=NuevoProceso;
@@ -266,13 +267,14 @@ void ver_lista_PCB(){
     printf("\n%s%15s%3d%15s%3d%15s%3d\n","BLOQUE DE CONTROL DE PROCESOS",
             "Quantum: ", quantum, "Tiempo: ", tiempo, "No.Ciclo: ", no_ciclo);
     printf("\n%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s\n", "Proceso", "T.Llega", 
-            "Ciclos", "Estado", "Ciclo SC", "Inicio SC", "Durac. SC", "Interrup");
+            "Ciclos", "Estado", "Interrup", "Ciclo SC", "Inicio SC", "Durac. SC");
     while(AuxProceso!=NULL){
         printf(" J%dP%-7d%2dt%9dms%9d%10d%10d%10d%10d\n", AuxProceso->id_proceso, 
                 AuxProceso->no_pag, AuxProceso->tiempo_llegada,
                 AuxProceso->ciclos_CPU, AuxProceso->estado,
+                AuxProceso->interrupcion,
                 AuxProceso->cont_ciclo_sec_crit, AuxProceso->inicio_sec_crit,
-                AuxProceso->duracion_sec_crit, AuxProceso->interrupcion);
+                AuxProceso->duracion_sec_crit);
         AuxProceso=AuxProceso->sig;
     }
 }
