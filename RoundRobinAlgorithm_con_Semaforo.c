@@ -319,7 +319,7 @@ void roundRobin() {
                 quantum--;
                 tiempoTotal++;
                 AuxProceso2->ciclos_CPU--;
-                if(AuxProceso2->inicio_sec_crit>=0 && AuxProceso2->duracion_sec_crit>0){
+                if(AuxProceso2->duracion_sec_crit>0){//Indica que se trata de un proceso E/S
                     if(AuxProceso2->cont_ciclo_sec_crit==AuxProceso2->inicio_sec_crit){
                         // Modificar el estado del proceso antes de copiar
                         AuxProceso2->estado = 4;
@@ -332,6 +332,16 @@ void roundRobin() {
                         goto salir;
                     }
                     AuxProceso2->cont_ciclo_sec_crit++;
+                }
+                //En caso de que no sea de entrada y/o salida 
+                //O bien, que sea distinto de codigo -1
+                else if(AuxProceso2->interrupcion!=-1){
+                    clrscr();
+                    printf("El tiempo %d tiene codigo de interrupcion: %d",AuxProceso2->tiempo_llegada,
+                         AuxProceso2->interrupcion);
+                    while(getchar()!='\n');
+                    eliminarNodoActual(AuxProceso2);
+                    goto salir;
                 }
             } 
             if(AuxProceso2->ciclos_CPU==0){
