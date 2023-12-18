@@ -67,6 +67,7 @@ void colocarEnMemoria();
 void roundRobin();
 void procesarTarea();
 void eliminarNodoActual(nodo_PCB *nodo_actual);
+void semaforo(void);
 
 int main(){
     srand(time(NULL));
@@ -143,10 +144,10 @@ void copiar_a_lista_tareas_semaforo(nodo_PCB *copiando){
         Psemaforo->cont_ciclo_sec_crit = copiando->cont_ciclo_sec_crit;
         Psemaforo->inicio_sec_crit     = copiando->inicio_sec_crit;
         Psemaforo->duracion_sec_crit   = copiando->duracion_sec_crit;
-        Psemaforo->semaforo = 1;
-        Psemaforo->wait =1;
-        Psemaforo->signal=1;
-        Psemaforo->sig=NULL;
+        Psemaforo->semaforo            = 0;
+        Psemaforo->wait                = 1;
+        Psemaforo->signal              = 0;
+        Psemaforo->sig                 = NULL;
         Qsemaforo=Psemaforo;
     }else{
         NuevoSemaforo = (PCB_Semaforo *)malloc(sizeof(PCB_Semaforo));
@@ -159,9 +160,9 @@ void copiar_a_lista_tareas_semaforo(nodo_PCB *copiando){
         NuevoSemaforo->cont_ciclo_sec_crit = copiando->cont_ciclo_sec_crit;
         NuevoSemaforo->inicio_sec_crit     = copiando->inicio_sec_crit;
         NuevoSemaforo->duracion_sec_crit   = copiando->duracion_sec_crit;
-        NuevoSemaforo->semaforo=1;
-        NuevoSemaforo->wait =1;
-        NuevoSemaforo->signal=1;
+        NuevoSemaforo->semaforo            = 0;
+        NuevoSemaforo->wait                = 1;
+        NuevoSemaforo->signal              = 0;
         NuevoSemaforo->sig                 = NULL;
         Qsemaforo->sig=NuevoSemaforo;
         Qsemaforo=NuevoSemaforo;
@@ -306,7 +307,7 @@ void colocarEnMemoria(){
 }
 
 void roundRobin() {
-    while(hayProcesos){
+    while(hayProcesos) {
         hayProcesos = FALSE;
         AuxProceso2 = Pproceso;
         while(AuxProceso2!=NULL){
@@ -319,7 +320,8 @@ void roundRobin() {
                 quantum--;
                 tiempoTotal++;
                 AuxProceso2->ciclos_CPU--;
-                if(AuxProceso2->duracion_sec_crit>0){//Indica que se trata de un proceso E/S
+                // Indica que se trata de un proceso E/S
+                if(AuxProceso2->duracion_sec_crit>0){
                     if(AuxProceso2->cont_ciclo_sec_crit==AuxProceso2->inicio_sec_crit){
                         // Modificar el estado del proceso antes de copiar
                         AuxProceso2->estado = 4;
@@ -335,28 +337,29 @@ void roundRobin() {
                 }
                 //En caso de que no sea de entrada y/o salida 
                 //O bien, que sea distinto de codigo -1
-                else if(AuxProceso2->interrupcion!=-1){
+                else if(AuxProceso2->interrupcion!=-1) {
                     clrscr();
-                    printf("\n  El proceso J%dP%d sale en el tiempo %d con codigo de interrupcion %d:\n    ",
+                    printf("\n\tEl proceso J%dP%d sale en el tiempo %d\n\tCodigo %d: ",
                         AuxProceso2->id_proceso, AuxProceso2->no_pag,
                         AuxProceso2->tiempo_llegada, AuxProceso2->interrupcion);
                     switch (AuxProceso2->interrupcion){
-                        case 0: printf("Division por cero.");
+                        case 0: printf("Division por cero.\n");
                             break;
-                        case 2: printf("Operacion de desbordamiento");
+                        case 2: printf("Operacion de desbordamiento.\n");
                             break;
-                        case 3: printf("Activacion del lenguaje BASIC en la ROM");
+                        case 3: printf("Activacion del lenguaje BASIC en la ROM.\n");
                             break;
-                        case 4: printf("RESET");
+                        case 4: printf("RESET.\n");
                             break;
                     }
                     while(getchar()!='\n');
                     eliminarNodoActual(AuxProceso2);
                     goto salir;
                 }
-            } 
-            if(AuxProceso2->ciclos_CPU==0){
-                AuxProceso2->estado=5;
+                semaforo(); // No estoy seguro de que esta sea la linea correcta
+            }
+            if(AuxProceso2->ciclos_CPU == 0) {
+                AuxProceso2->estado = 5;
             }
             else
                 AuxProceso2->estado=4;
@@ -397,5 +400,38 @@ void eliminarNodoActual(nodo_PCB *nodo_actual) {
         }
 
         free(nodo_actual);  // Libera la memoria del nodo a eliminar
+    }
+}
+
+void semaforo(void) {
+    AuxSemaforo = Psemaforo;
+    if(AuxSemaforo != NULL) {
+        // Si el proceso ingresó con wait = 1 y la duración de SC > 0
+        if(AuxSemaforo->wait && (AuxSemaforo->semaforo == 0)
+                && (AuxSemaforo->duracion_sec_crit > 0)) {
+            AuxSemaforo->semaforo--;
+            AuxSemaforo->duracion_sec_crit--;
+            AuxSemaforo->ciclos_CPU--;
+            AuxSemaforo->wait = 0;
+        // Si ya se comenzó a decrementar la SC continuamos decrementando
+        } else if (AuxSemaforo->wait == 0 && (AuxSemaforo->semaforo < 0)
+                && (AuxSemaforo->duracion_sec_crit > 0)) {
+            AuxSemaforo->duracion_sec_crit--;
+            AuxSemaforo->ciclos_CPU--;
+        // Si ya se terminó la SC mandamos señal de signal
+        } else if(AuxSemaforo->wait == 0 && (AuxSemaforo->semaforo < 0)
+                && (AuxSemaforo->duracion_sec_crit == 0)) {
+            AuxSemaforo->signal = 1;
+        // Si tenemos una señal de signal y ya no hay SC eliminamos nodo cabeza
+        } else if (AuxSemaforo->signal && (AuxSemaforo->duracion_sec_crit < 1)) {
+            if(Psemaforo->sig != NULL) {
+                Psemaforo = Psemaforo->sig; // La nueva cabeza es el siguiente
+                free(AuxSemaforo);
+            } else {
+                Psemaforo = NULL;
+                free(AuxSemaforo);
+            }
+        }
+        imprimir_tabla(Psemaforo);
     }
 }
