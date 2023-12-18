@@ -142,6 +142,7 @@ void copiar_a_lista_tareas_semaforo(nodo_PCB *copiando){
         Psemaforo->cont_ciclo_sec_crit = copiando->cont_ciclo_sec_crit;
         Psemaforo->inicio_sec_crit     = copiando->inicio_sec_crit;
         Psemaforo->duracion_sec_crit   = copiando->duracion_sec_crit;
+        Psemaforo->interrupcion        = copiando->interrupcion;
         Psemaforo->semaforo = 1;
         Psemaforo->wait =1;
         Psemaforo->signal=1;
@@ -157,6 +158,7 @@ void copiar_a_lista_tareas_semaforo(nodo_PCB *copiando){
         NuevoSemaforo->cont_ciclo_sec_crit = copiando->cont_ciclo_sec_crit;
         NuevoSemaforo->inicio_sec_crit     = copiando->inicio_sec_crit;
         NuevoSemaforo->duracion_sec_crit   = copiando->duracion_sec_crit;
+        NuevoSemaforo->interrupcion        = copiando->interrupcion;
         NuevoSemaforo->semaforo=1;
         NuevoSemaforo->wait =1;
         NuevoSemaforo->signal=1;
