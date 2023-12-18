@@ -407,40 +407,30 @@ void eliminarNodoActual(nodo_PCB *nodo_actual) {
 }
 
 void semaforo(void) {
-    AuxSemaforo = Psemaforo;
-    if(AuxSemaforo != NULL) {
+    if(Psemaforo != NULL) {
         // Si el proceso ingresó con wait = 1 y la duración de SC > 0
-        if(AuxSemaforo->wait && (AuxSemaforo->semaforo == 0)
-                && (AuxSemaforo->duracion_sec_crit > 0)) {
-            AuxSemaforo->semaforo--;
-            AuxSemaforo->duracion_sec_crit--;
-            AuxSemaforo->ciclos_CPU--;
-            AuxSemaforo->wait = 0;
+        if(Psemaforo->wait && (Psemaforo->semaforo == 0)
+                && (Psemaforo->duracion_sec_crit > 0)) {
+            Psemaforo->semaforo--;
+            Psemaforo->duracion_sec_crit--;
+            Psemaforo->ciclos_CPU--;
+            Psemaforo->wait = 0;
         }
         // Si ya se comenzó a decrementar la SC continuamos decrementando 
-        else if (AuxSemaforo->wait == 0 && (AuxSemaforo->semaforo == -1)
-                && (AuxSemaforo->duracion_sec_crit > 0)) {
-            AuxSemaforo->duracion_sec_crit--;
-            AuxSemaforo->ciclos_CPU--;
+        else if (Psemaforo->wait == 0 && (Psemaforo->semaforo == -1)
+                && (Psemaforo->duracion_sec_crit > 0)) {
+            Psemaforo->duracion_sec_crit--;
+            Psemaforo->ciclos_CPU--;
         }
         // Si ya se terminó la SC mandamos señal de signal
-        else if(AuxSemaforo->wait == 0 && (AuxSemaforo->semaforo == -1)
-                && (AuxSemaforo->duracion_sec_crit == 0) && (AuxSemaforo->signal == 0)) {
-            AuxSemaforo->signal = 1;
+        else if(Psemaforo->wait == 0 && (Psemaforo->semaforo == -1) &&
+                (Psemaforo->duracion_sec_crit == 0) && (Psemaforo->signal == 0)) {
+            Psemaforo->signal = 1;
         }
         // Si tenemos una señal de signal y ya no hay SC eliminamos nodo cabeza
-        //Nunca iba a entrar a esta condicion
-        //tuvimos que agregar una cuarta condicion al penultimo "else if"
-        //De otra forma la ultima condicion, cumplia con las caracteristicas de la penultima
-        //y por lo tanto no llegaba
-        else if (AuxSemaforo->signal && (AuxSemaforo->duracion_sec_crit == 0)) {
-            if(Psemaforo->sig != NULL) {
-                Psemaforo = Psemaforo->sig; // La nueva cabeza es el siguiente
-                free(AuxSemaforo);
-            } else {
-                Psemaforo = NULL;
-                free(AuxSemaforo);
-            }
+        else if (Psemaforo->signal && (Psemaforo->duracion_sec_crit == 0)) {
+            Psemaforo = Psemaforo->sig; // La nueva cabeza es el siguiente
+            free(Psemaforo);
         }
     }
 }
