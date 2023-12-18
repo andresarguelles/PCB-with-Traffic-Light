@@ -337,8 +337,18 @@ void roundRobin() {
                 //O bien, que sea distinto de codigo -1
                 else if(AuxProceso2->interrupcion!=-1){
                     clrscr();
-                    printf("El tiempo %d tiene codigo de interrupcion: %d",AuxProceso2->tiempo_llegada,
-                         AuxProceso2->interrupcion);
+                    printf("\n  El tiempo %d tiene codigo de interrupcion %d:\n    ",
+                        AuxProceso2->tiempo_llegada, AuxProceso2->interrupcion);
+                    switch (AuxProceso2->interrupcion){
+                        case 0: printf("Division por cero.");
+                            break;
+                        case 2: printf("Operacion de desbordamiento");
+                            break;
+                        case 3: printf("Activacion del lenguaje BASIC en la ROM");
+                            break;
+                        case 4: printf("RESET");
+                            break;
+                    }
                     while(getchar()!='\n');
                     eliminarNodoActual(AuxProceso2);
                     goto salir;
