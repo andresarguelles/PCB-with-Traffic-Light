@@ -221,14 +221,19 @@ void crear_lista_PCB(void){
                 Pproceso->estado = 1;//Tiene 4 posibles estados 1, 2, 3 y 5
                 Pproceso->interrupcion = (rand() % 6) - 1; // de -1 a 4
                 Pproceso->cont_ciclo_sec_crit = 0;
-                Pproceso->inicio_sec_crit = rand() % Pproceso->ciclos_CPU;
-                /* Si la Sec. Crit. 3 posiciones antes del número de ciclos
-                 * de CPU creamos una duración de SC entre 1 y 3 */
-                if((Pproceso->ciclos_CPU - Pproceso->inicio_sec_crit) > 2)
-                    Pproceso->duracion_sec_crit = (rand() % 3) + 1;
-                else {
-                    Pproceso->duracion_sec_crit = (rand() %
-                        (Pproceso->ciclos_CPU - Pproceso->inicio_sec_crit) + 1);
+                if(Pproceso->interrupcion==1){
+                    Pproceso->inicio_sec_crit = rand() % Pproceso->ciclos_CPU;
+                    /* Si la Sec. Crit. 3 posiciones antes del número de ciclos
+                    * de CPU creamos una duración de SC entre 1 y 3 */
+                    if((Pproceso->ciclos_CPU - Pproceso->inicio_sec_crit) > 2)
+                        Pproceso->duracion_sec_crit = (rand() % 3) + 1;
+                    else {
+                        Pproceso->duracion_sec_crit = (rand() %
+                            (Pproceso->ciclos_CPU - Pproceso->inicio_sec_crit) + 1);
+                    }
+                }else{
+                    Pproceso->inicio_sec_crit = 0;
+                    Pproceso->duracion_sec_crit = 0;
                 }
                 Pproceso->sig=NULL;
                 Qproceso=Pproceso;
@@ -242,14 +247,18 @@ void crear_lista_PCB(void){
                 NuevoProceso->estado = 1;
                 NuevoProceso->interrupcion=(rand() % 6) - 1;
                 NuevoProceso->cont_ciclo_sec_crit = 0;
-                NuevoProceso->inicio_sec_crit = rand() % NuevoProceso->ciclos_CPU;
-                if((NuevoProceso->ciclos_CPU - NuevoProceso->inicio_sec_crit) > 2)
-                    NuevoProceso->duracion_sec_crit = (rand() % 3) + 1;
-                else {
-                    NuevoProceso->duracion_sec_crit = (rand() %
-                        (NuevoProceso->ciclos_CPU - NuevoProceso->inicio_sec_crit) + 1);
+                if(NuevoProceso->interrupcion==1){
+                    NuevoProceso->inicio_sec_crit = rand() % NuevoProceso->ciclos_CPU;
+                    if((NuevoProceso->ciclos_CPU - NuevoProceso->inicio_sec_crit) > 2)
+                        NuevoProceso->duracion_sec_crit = (rand() % 3) + 1;
+                    else {
+                        NuevoProceso->duracion_sec_crit = (rand() %
+                            (NuevoProceso->ciclos_CPU - NuevoProceso->inicio_sec_crit) + 1);
+                    }
+                }else{
+                    NuevoProceso->inicio_sec_crit =0;
+                    NuevoProceso->duracion_sec_crit=0;
                 }
-                
                 NuevoProceso->sig=NULL;
                 Qproceso->sig=NuevoProceso;
                 Qproceso=NuevoProceso;
