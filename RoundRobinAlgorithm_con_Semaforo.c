@@ -337,7 +337,8 @@ void roundRobin() {
                 //O bien, que sea distinto de codigo -1
                 else if(AuxProceso2->interrupcion!=-1){
                     clrscr();
-                    printf("\n  El tiempo %d tiene codigo de interrupcion %d:\n    ",
+                    printf("\n  El proceso J%dP%d sale en el tiempo %d con codigo de interrupcion %d:\n    ",
+                        AuxProceso2->id_proceso, AuxProceso2->no_pag,
                         AuxProceso2->tiempo_llegada, AuxProceso2->interrupcion);
                     switch (AuxProceso2->interrupcion){
                         case 0: printf("Division por cero.");
