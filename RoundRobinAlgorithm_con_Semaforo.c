@@ -68,6 +68,8 @@ void roundRobin();
 void procesarTarea();
 void eliminarNodoActual(nodo_PCB *nodo_actual);
 void semaforo(void);
+nodo_PCB* PCBaSemaforo(PCB_Semaforo *cabeza);
+void copiarAlPCB(PCB_Semaforo *cabeza);
 
 int main(){
     srand(time(NULL));
@@ -429,8 +431,54 @@ void semaforo(void) {
         }
         // Si tenemos una señal de signal y ya no hay SC eliminamos nodo cabeza
         else if (Psemaforo->signal && (Psemaforo->duracion_sec_crit == 0)) {
+            if(Psemaforo->ciclos_CPU>0){
+                Psemaforo->estado = 4;
+                copiarAlPCB(Psemaforo);
+            }
             Psemaforo = Psemaforo->sig; // La nueva cabeza es el siguiente
             free(Psemaforo);
         }
     }
+}
+
+void copiarAlPCB(PCB_Semaforo *cabeza){
+    if(Pproceso && Pproceso->sig) {
+        nodo_PCB *temporal, *temporal2;
+        temporal = (nodo_PCB *)malloc(sizeof(nodo_PCB));
+        temporal2 = (nodo_PCB *)malloc(sizeof(nodo_PCB));
+        temporal = Pproceso;
+        temporal2 = Pproceso->sig;
+        nodo_PCB *semaforoCopia = PCBaSemaforo(cabeza);
+        //
+        if(temporal->tiempo_llegada > semaforoCopia->tiempo_llegada){
+            semaforoCopia->sig = temporal;
+            Pproceso = semaforoCopia;
+        }else if(semaforoCopia->tiempo_llegada > Qproceso->tiempo_llegada){
+            Qproceso->sig = semaforoCopia;
+            Qproceso = semaforoCopia;
+        }else{
+            while(temporal2->sig != NULL) {
+                if(semaforoCopia->tiempo_llegada > temporal->tiempo_llegada) {
+                    temporal->sig = semaforoCopia;
+                    semaforoCopia->sig = temporal2;
+                }
+                temporal  = temporal->sig;
+                temporal2 = temporal2->sig;
+            }
+        }
+    }
+}
+
+nodo_PCB* PCBaSemaforo(PCB_Semaforo *cabeza){
+    nodo_PCB *semaforoCopia = (nodo_PCB *)malloc(sizeof(nodo_PCB));
+    semaforoCopia->id_proceso = cabeza->id_proceso;
+    semaforoCopia->no_pag = cabeza->no_pag;
+    semaforoCopia->tiempo_llegada = cabeza->tiempo_llegada;
+    semaforoCopia->ciclos_CPU = cabeza->ciclos_CPU;
+    semaforoCopia->estado= cabeza->estado;
+    semaforoCopia->interrupcion = cabeza->interrupcion;
+    semaforoCopia->cont_ciclo_sec_crit = cabeza->cont_ciclo_sec_crit;
+    semaforoCopia->inicio_sec_crit = cabeza->inicio_sec_crit;
+    semaforoCopia->duracion_sec_crit = cabeza->duracion_sec_crit;
+    return semaforoCopia;
 }
