@@ -317,9 +317,6 @@ void roundRobin() {
             while(AuxProceso2->ciclos_CPU>0 && quantum !=0){
                 ver_lista_PCB();
                 imprimir_tabla(Psemaforo);
-                quantum--;
-                tiempoTotal++;
-                AuxProceso2->ciclos_CPU--;
                 // Indica que se trata de un proceso E/S
                 if(AuxProceso2->duracion_sec_crit>0){
                     if(AuxProceso2->cont_ciclo_sec_crit==AuxProceso2->inicio_sec_crit){
@@ -354,9 +351,15 @@ void roundRobin() {
                     }
                     while(getchar()!='\n');
                     eliminarNodoActual(AuxProceso2);
+                    //Sucede que cuando se cumple una interrupcion, se sale sin usar semaforo
+                    //y se sale hasta la linea 369
+                    semaforo();
                     goto salir;
                 }
-                semaforo(); // No estoy seguro de que esta sea la linea correcta
+                semaforo();
+                quantum--;
+                tiempoTotal++;
+                AuxProceso2->ciclos_CPU--;
             }
             if(AuxProceso2->ciclos_CPU == 0) {
                 AuxProceso2->estado = 5;
@@ -413,17 +416,24 @@ void semaforo(void) {
             AuxSemaforo->duracion_sec_crit--;
             AuxSemaforo->ciclos_CPU--;
             AuxSemaforo->wait = 0;
-        // Si ya se comenzó a decrementar la SC continuamos decrementando
-        } else if (AuxSemaforo->wait == 0 && (AuxSemaforo->semaforo < 0)
+        }
+        // Si ya se comenzó a decrementar la SC continuamos decrementando 
+        else if (AuxSemaforo->wait == 0 && (AuxSemaforo->semaforo == -1)
                 && (AuxSemaforo->duracion_sec_crit > 0)) {
             AuxSemaforo->duracion_sec_crit--;
             AuxSemaforo->ciclos_CPU--;
+        }
         // Si ya se terminó la SC mandamos señal de signal
-        } else if(AuxSemaforo->wait == 0 && (AuxSemaforo->semaforo < 0)
-                && (AuxSemaforo->duracion_sec_crit == 0)) {
+        else if(AuxSemaforo->wait == 0 && (AuxSemaforo->semaforo == -1)
+                && (AuxSemaforo->duracion_sec_crit == 0) && (AuxSemaforo->signal == 0)) {
             AuxSemaforo->signal = 1;
+        }
         // Si tenemos una señal de signal y ya no hay SC eliminamos nodo cabeza
-        } else if (AuxSemaforo->signal && (AuxSemaforo->duracion_sec_crit < 1)) {
+        //Nunca iba a entrar a esta condicion
+        //tuvimos que agregar una cuarta condicion al penultimo "else if"
+        //De otra forma la ultima condicion, cumplia con las caracteristicas de la penultima
+        //y por lo tanto no llegaba
+        else if (AuxSemaforo->signal && (AuxSemaforo->duracion_sec_crit == 0)) {
             if(Psemaforo->sig != NULL) {
                 Psemaforo = Psemaforo->sig; // La nueva cabeza es el siguiente
                 free(AuxSemaforo);
@@ -432,6 +442,5 @@ void semaforo(void) {
                 free(AuxSemaforo);
             }
         }
-        imprimir_tabla(Psemaforo);
     }
 }
