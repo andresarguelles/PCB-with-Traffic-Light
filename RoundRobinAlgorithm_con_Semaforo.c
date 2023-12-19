@@ -67,6 +67,9 @@ void colocarEnMemoria();
 void roundRobin();
 void procesarTarea();
 void eliminarNodoActual(nodo_PCB *nodo_actual);
+void semaforo(void);
+nodo_PCB* PCBaSemaforo(PCB_Semaforo *cabeza);
+void copiarAlPCB(PCB_Semaforo *cabeza);
 
 int main(){
     srand(time(NULL));
@@ -143,10 +146,10 @@ void copiar_a_lista_tareas_semaforo(nodo_PCB *copiando){
         Psemaforo->cont_ciclo_sec_crit = copiando->cont_ciclo_sec_crit;
         Psemaforo->inicio_sec_crit     = copiando->inicio_sec_crit;
         Psemaforo->duracion_sec_crit   = copiando->duracion_sec_crit;
-        Psemaforo->semaforo = 1;
-        Psemaforo->wait =1;
-        Psemaforo->signal=1;
-        Psemaforo->sig=NULL;
+        Psemaforo->semaforo            = 0;
+        Psemaforo->wait                = 1;
+        Psemaforo->signal              = 0;
+        Psemaforo->sig                 = NULL;
         Qsemaforo=Psemaforo;
     }else{
         NuevoSemaforo = (PCB_Semaforo *)malloc(sizeof(PCB_Semaforo));
@@ -159,9 +162,9 @@ void copiar_a_lista_tareas_semaforo(nodo_PCB *copiando){
         NuevoSemaforo->cont_ciclo_sec_crit = copiando->cont_ciclo_sec_crit;
         NuevoSemaforo->inicio_sec_crit     = copiando->inicio_sec_crit;
         NuevoSemaforo->duracion_sec_crit   = copiando->duracion_sec_crit;
-        NuevoSemaforo->semaforo=1;
-        NuevoSemaforo->wait =1;
-        NuevoSemaforo->signal=1;
+        NuevoSemaforo->semaforo            = 0;
+        NuevoSemaforo->wait                = 1;
+        NuevoSemaforo->signal              = 0;
         NuevoSemaforo->sig                 = NULL;
         Qsemaforo->sig=NuevoSemaforo;
         Qsemaforo=NuevoSemaforo;
@@ -306,7 +309,7 @@ void colocarEnMemoria(){
 }
 
 void roundRobin() {
-    while(hayProcesos){
+    while(hayProcesos) {
         hayProcesos = FALSE;
         AuxProceso2 = Pproceso;
         while(AuxProceso2!=NULL){
@@ -316,10 +319,8 @@ void roundRobin() {
             while(AuxProceso2->ciclos_CPU>0 && quantum !=0){
                 ver_lista_PCB();
                 imprimir_tabla(Psemaforo);
-                quantum--;
-                tiempoTotal++;
-                AuxProceso2->ciclos_CPU--;
-                if(AuxProceso2->duracion_sec_crit>0){//Indica que se trata de un proceso E/S
+                // Indica que se trata de un proceso E/S
+                if(AuxProceso2->duracion_sec_crit>0){
                     if(AuxProceso2->cont_ciclo_sec_crit==AuxProceso2->inicio_sec_crit){
                         // Modificar el estado del proceso antes de copiar
                         AuxProceso2->estado = 4;
@@ -335,28 +336,35 @@ void roundRobin() {
                 }
                 //En caso de que no sea de entrada y/o salida 
                 //O bien, que sea distinto de codigo -1
-                else if(AuxProceso2->interrupcion!=-1){
+                else if(AuxProceso2->interrupcion!=-1) {
                     clrscr();
-                    printf("\n  El proceso J%dP%d sale en el tiempo %d con codigo de interrupcion %d:\n    ",
+                    printf("\n\tEl proceso J%dP%d sale en el tiempo %d\n\tCodigo %d: ",
                         AuxProceso2->id_proceso, AuxProceso2->no_pag,
                         AuxProceso2->tiempo_llegada, AuxProceso2->interrupcion);
                     switch (AuxProceso2->interrupcion){
-                        case 0: printf("Division por cero.");
+                        case 0: printf("Division por cero.\n");
                             break;
-                        case 2: printf("Operacion de desbordamiento");
+                        case 2: printf("Operacion de desbordamiento.\n");
                             break;
-                        case 3: printf("Activacion del lenguaje BASIC en la ROM");
+                        case 3: printf("Activacion del lenguaje BASIC en la ROM.\n");
                             break;
-                        case 4: printf("RESET");
+                        case 4: printf("RESET.\n");
                             break;
                     }
                     while(getchar()!='\n');
                     eliminarNodoActual(AuxProceso2);
+                    //Sucede que cuando se cumple una interrupcion, se sale sin usar semaforo
+                    //y se sale hasta la linea 369
+                    semaforo();
                     goto salir;
                 }
-            } 
-            if(AuxProceso2->ciclos_CPU==0){
-                AuxProceso2->estado=5;
+                semaforo();
+                quantum--;
+                tiempoTotal++;
+                AuxProceso2->ciclos_CPU--;
+            }
+            if(AuxProceso2->ciclos_CPU == 0) {
+                AuxProceso2->estado = 5;
             }
             else
                 AuxProceso2->estado=4;
@@ -398,4 +406,78 @@ void eliminarNodoActual(nodo_PCB *nodo_actual) {
 
         free(nodo_actual);  // Libera la memoria del nodo a eliminar
     }
+}
+
+void semaforo(void) {
+    if(Psemaforo != NULL) {
+        // Si el proceso ingresó con wait = 1 y la duración de SC > 0
+        if(Psemaforo->wait && (Psemaforo->semaforo == 0)
+                && (Psemaforo->duracion_sec_crit > 0)) {
+            Psemaforo->semaforo--;
+            Psemaforo->duracion_sec_crit--;
+            Psemaforo->ciclos_CPU--;
+            Psemaforo->wait = 0;
+        }
+        // Si ya se comenzó a decrementar la SC continuamos decrementando 
+        else if (Psemaforo->wait == 0 && (Psemaforo->semaforo == -1)
+                && (Psemaforo->duracion_sec_crit > 0)) {
+            Psemaforo->duracion_sec_crit--;
+            Psemaforo->ciclos_CPU--;
+        }
+        // Si ya se terminó la SC mandamos señal de signal
+        else if(Psemaforo->wait == 0 && (Psemaforo->semaforo == -1) &&
+                (Psemaforo->duracion_sec_crit == 0) && (Psemaforo->signal == 0)) {
+            Psemaforo->signal = 1;
+        }
+        // Si tenemos una señal de signal y ya no hay SC eliminamos nodo cabeza
+        else if (Psemaforo->signal && (Psemaforo->duracion_sec_crit == 0)) {
+            if(Psemaforo->ciclos_CPU>0){
+                Psemaforo->estado = 4;
+                copiarAlPCB(Psemaforo);
+            }
+            Psemaforo = Psemaforo->sig; // La nueva cabeza es el siguiente
+            free(Psemaforo);
+        }
+    }
+}
+
+void copiarAlPCB(PCB_Semaforo *cabeza){
+    if(Pproceso && Pproceso->sig) {
+        nodo_PCB *temporal, *temporal2;
+        temporal = (nodo_PCB *)malloc(sizeof(nodo_PCB));
+        temporal2 = (nodo_PCB *)malloc(sizeof(nodo_PCB));
+        temporal = Pproceso;
+        temporal2 = Pproceso->sig;
+        nodo_PCB *semaforoCopia = PCBaSemaforo(cabeza);
+        if(temporal->tiempo_llegada > semaforoCopia->tiempo_llegada){
+            semaforoCopia->sig = temporal;
+            Pproceso = semaforoCopia;
+        }else if(semaforoCopia->tiempo_llegada > Qproceso->tiempo_llegada){
+            Qproceso->sig = semaforoCopia;
+            Qproceso = semaforoCopia;
+        }else{
+            while(temporal2->sig != NULL) {
+                if(semaforoCopia->tiempo_llegada > temporal->tiempo_llegada) {
+                    temporal->sig = semaforoCopia;
+                    semaforoCopia->sig = temporal2;
+                }
+                temporal  = temporal->sig;
+                temporal2 = temporal2->sig;
+            }
+        }
+    }
+}
+
+nodo_PCB* PCBaSemaforo(PCB_Semaforo *cabeza){
+    nodo_PCB *semaforoCopia = (nodo_PCB *)malloc(sizeof(nodo_PCB));
+    semaforoCopia->id_proceso = cabeza->id_proceso;
+    semaforoCopia->no_pag = cabeza->no_pag;
+    semaforoCopia->tiempo_llegada = cabeza->tiempo_llegada;
+    semaforoCopia->ciclos_CPU = cabeza->ciclos_CPU;
+    semaforoCopia->estado= cabeza->estado;
+    semaforoCopia->interrupcion = cabeza->interrupcion;
+    semaforoCopia->cont_ciclo_sec_crit = cabeza->cont_ciclo_sec_crit;
+    semaforoCopia->inicio_sec_crit = cabeza->inicio_sec_crit;
+    semaforoCopia->duracion_sec_crit = cabeza->duracion_sec_crit;
+    return semaforoCopia;
 }
