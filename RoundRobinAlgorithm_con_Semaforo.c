@@ -233,7 +233,9 @@ void crear_lista_PCB(void){
                 Pproceso->interrupcion = vectorInterrupciones[rand()%6];
                 Pproceso->cont_ciclo_sec_crit = 0;
                 if(Pproceso->interrupcion!=-1){
-                    Pproceso->inicio_sec_crit = rand() % Pproceso->ciclos_CPU;
+                    do{
+                        Pproceso->inicio_sec_crit = rand() % Pproceso->ciclos_CPU;
+                    }while(Pproceso->inicio_sec_crit ==5);
                     /* Si la Sec. Crit. 3 posiciones antes del número de ciclos
                     * de CPU creamos una duración de SC entre 1 y 3 */
                     if((Pproceso->ciclos_CPU - Pproceso->inicio_sec_crit) > 2)
@@ -259,7 +261,9 @@ void crear_lista_PCB(void){
                 NuevoProceso->interrupcion= vectorInterrupciones[rand()%6];
                 NuevoProceso->cont_ciclo_sec_crit = 0;
                 if(NuevoProceso->interrupcion!=-1){
-                    NuevoProceso->inicio_sec_crit = rand() % NuevoProceso->ciclos_CPU;
+                    do{
+                        NuevoProceso->inicio_sec_crit = rand() % NuevoProceso->ciclos_CPU;
+                    }while(NuevoProceso->inicio_sec_crit ==5);
                     if((NuevoProceso->ciclos_CPU - NuevoProceso->inicio_sec_crit) > 2)
                         NuevoProceso->duracion_sec_crit = (rand() % 3) + 1;
                     else {
