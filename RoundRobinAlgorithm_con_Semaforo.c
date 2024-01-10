@@ -211,10 +211,18 @@ void crear_lista_PCB(void){
     int contadorProcesos=0;
     //Dado que no hay proceso, agarramos la primer tarea
     AuxTarea = Ptarea;
+    //Interrupciones
+       //Error: 
+            //0 - Division entre 0
+            //1 - Debug exception
+            //4 - Overflow
+       //De entrada y/o salida:
+            //33 - Entrada/Teclado PS/2
+            //38 - Controlador de video
+    int vectorInterrupciones[6]={-1, 0, 1, 4, 33, 38};
     while(AuxTarea!=NULL){
         int contadorPagina = 0;
         while(contadorPagina<PAG_POR_TAREA){
-
             if(Pproceso==NULL){
                 Pproceso= (nodo_PCB *)malloc(sizeof(nodo_PCB));
                 Pproceso->id_proceso= AuxTarea->id_tarea;
@@ -222,9 +230,9 @@ void crear_lista_PCB(void){
                 Pproceso->tiempo_llegada= contadorProcesos;
                 Pproceso->ciclos_CPU = (rand() % 11) + 5;
                 Pproceso->estado = 1;//Tiene 4 posibles estados 1, 2, 3 y 5
-                Pproceso->interrupcion = (rand() % 6) - 1; // de -1 a 4
+                Pproceso->interrupcion = vectorInterrupciones[rand()%7];
                 Pproceso->cont_ciclo_sec_crit = 0;
-                if(Pproceso->interrupcion==1){
+                if(Pproceso->interrupcion!=-1){
                     Pproceso->inicio_sec_crit = rand() % Pproceso->ciclos_CPU;
                     /* Si la Sec. Crit. 3 posiciones antes del número de ciclos
                     * de CPU creamos una duración de SC entre 1 y 3 */
@@ -248,9 +256,9 @@ void crear_lista_PCB(void){
                 NuevoProceso->tiempo_llegada= contadorProcesos;
                 NuevoProceso->ciclos_CPU = (rand() % 11) + 5;
                 NuevoProceso->estado = 1;
-                NuevoProceso->interrupcion=(rand() % 6) - 1;
+                NuevoProceso->interrupcion= vectorInterrupciones[rand()%7];
                 NuevoProceso->cont_ciclo_sec_crit = 0;
-                if(NuevoProceso->interrupcion==1){
+                if(NuevoProceso->interrupcion!=-1){
                     NuevoProceso->inicio_sec_crit = rand() % NuevoProceso->ciclos_CPU;
                     if((NuevoProceso->ciclos_CPU - NuevoProceso->inicio_sec_crit) > 2)
                         NuevoProceso->duracion_sec_crit = (rand() % 3) + 1;
@@ -320,7 +328,7 @@ void roundRobin() {
                 ver_lista_PCB();
                 imprimir_tabla(Psemaforo);
                 // Indica que se trata de un proceso E/S
-                if(AuxProceso2->duracion_sec_crit>0){
+                if(AuxProceso2->interrupcion==33 || AuxProceso2->interrupcion==38){
                     if(AuxProceso2->cont_ciclo_sec_crit==AuxProceso2->inicio_sec_crit){
                         // Modificar el estado del proceso antes de copiar
                         AuxProceso2->estado = 4;
@@ -344,11 +352,9 @@ void roundRobin() {
                     switch (AuxProceso2->interrupcion){
                         case 0: printf("Division por cero.\n");
                             break;
-                        case 2: printf("Operacion de desbordamiento.\n");
+                        case 1: printf("Excepcion de depuracion.\n");
                             break;
-                        case 3: printf("Activacion del lenguaje BASIC en la ROM.\n");
-                            break;
-                        case 4: printf("RESET.\n");
+                        case 4: printf("Desbordamiento del buffer.\n");
                             break;
                     }
                     while(getchar()!='\n');
@@ -357,7 +363,7 @@ void roundRobin() {
                     //y se sale hasta la linea 369
                     semaforo();
                     goto salir;
-                }
+                    }
                 semaforo();
                 quantum--;
                 tiempoTotal++;
