@@ -230,7 +230,7 @@ void crear_lista_PCB(void){
                 Pproceso->tiempo_llegada= contadorProcesos;
                 Pproceso->ciclos_CPU = (rand() % 11) + 5;
                 Pproceso->estado = 1;//Tiene 4 posibles estados 1, 2, 3 y 5
-                Pproceso->interrupcion = vectorInterrupciones[rand()%7];
+                Pproceso->interrupcion = vectorInterrupciones[rand()%6];
                 Pproceso->cont_ciclo_sec_crit = 0;
                 if(Pproceso->interrupcion!=-1){
                     Pproceso->inicio_sec_crit = rand() % Pproceso->ciclos_CPU;
@@ -256,7 +256,7 @@ void crear_lista_PCB(void){
                 NuevoProceso->tiempo_llegada= contadorProcesos;
                 NuevoProceso->ciclos_CPU = (rand() % 11) + 5;
                 NuevoProceso->estado = 1;
-                NuevoProceso->interrupcion= vectorInterrupciones[rand()%7];
+                NuevoProceso->interrupcion= vectorInterrupciones[rand()%6];
                 NuevoProceso->cont_ciclo_sec_crit = 0;
                 if(NuevoProceso->interrupcion!=-1){
                     NuevoProceso->inicio_sec_crit = rand() % NuevoProceso->ciclos_CPU;
@@ -327,43 +327,43 @@ void roundRobin() {
             while(AuxProceso2->ciclos_CPU>0 && quantum !=0){
                 ver_lista_PCB();
                 imprimir_tabla(Psemaforo);
-                // Indica que se trata de un proceso E/S
-                if(AuxProceso2->interrupcion==33 || AuxProceso2->interrupcion==38){
-                    if(AuxProceso2->cont_ciclo_sec_crit==AuxProceso2->inicio_sec_crit){
-                        // Modificar el estado del proceso antes de copiar
-                        AuxProceso2->estado = 4;
-                        ver_lista_PCB();
-                        // Meter info en la nueva tabla de semaforo
-                        copiar_a_lista_tareas_semaforo(AuxProceso2);
-                        // Eliminar nodo de la tabla PCB
-                        eliminarNodoActual(AuxProceso2);
-                        imprimir_tabla(Psemaforo);
-                        goto salir;
+                // Indica que se trata de un proceso con una interrupción
+                if(AuxProceso2->interrupcion != -1){
+                    if(AuxProceso2->cont_ciclo_sec_crit == AuxProceso2->inicio_sec_crit) {
+                        if(AuxProceso2->interrupcion == 33 || AuxProceso2->interrupcion == 38) {
+                            // Modificar el estado del proceso antes de copiar
+                            AuxProceso2->estado = 4;
+                            ver_lista_PCB();
+                            // Meter info en la nueva tabla de semaforo
+                            copiar_a_lista_tareas_semaforo(AuxProceso2);
+                            // Eliminar nodo de la tabla PCB
+                            eliminarNodoActual(AuxProceso2);
+                            imprimir_tabla(Psemaforo);
+                            semaforo();
+                            goto salir;
+                        } else {
+                            clrscr();
+                            printf("\n\tEl proceso J%dP%d sale en el tiempo %d\n\tCodigo %d: ",
+                                    AuxProceso2->id_proceso, AuxProceso2->no_pag,
+                                    AuxProceso2->tiempo_llegada, AuxProceso2->interrupcion);
+                            switch (AuxProceso2->interrupcion){
+                                case 0: printf("Division por cero.\n");
+                                        break;
+                                case 1: printf("Excepcion de depuracion.\n");
+                                        break;
+                                case 4: printf("Desbordamiento del buffer.\n");
+                                        break;
+                            }
+                            while(getchar()!='\n');
+                            eliminarNodoActual(AuxProceso2);
+                            //Sucede que cuando se cumple una interrupcion, se sale sin usar semaforo
+                            //y se sale hasta la linea 369
+                            semaforo();
+                            goto salir;
+                        }
                     }
                     AuxProceso2->cont_ciclo_sec_crit++;
                 }
-                //En caso de que no sea de entrada y/o salida 
-                //O bien, que sea distinto de codigo -1
-                else if(AuxProceso2->interrupcion!=-1) {
-                    clrscr();
-                    printf("\n\tEl proceso J%dP%d sale en el tiempo %d\n\tCodigo %d: ",
-                        AuxProceso2->id_proceso, AuxProceso2->no_pag,
-                        AuxProceso2->tiempo_llegada, AuxProceso2->interrupcion);
-                    switch (AuxProceso2->interrupcion){
-                        case 0: printf("Division por cero.\n");
-                            break;
-                        case 1: printf("Excepcion de depuracion.\n");
-                            break;
-                        case 4: printf("Desbordamiento del buffer.\n");
-                            break;
-                    }
-                    while(getchar()!='\n');
-                    eliminarNodoActual(AuxProceso2);
-                    //Sucede que cuando se cumple una interrupcion, se sale sin usar semaforo
-                    //y se sale hasta la linea 369
-                    semaforo();
-                    goto salir;
-                    }
                 semaforo();
                 quantum--;
                 tiempoTotal++;
